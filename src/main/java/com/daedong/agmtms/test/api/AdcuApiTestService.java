@@ -43,6 +43,13 @@ public class AdcuApiTestService extends BaseApiTestService {
         //selectEquipment(); //작업기 조회
         //registWayPointInfo(); //작업경로 등록
         //registWayPointFile(); //작업경로 파일(RDDF) 등록
+        //registLogData(); //작업기록등록
+        //selectWayPointInfo(); //작업경로 조회
+        //selectWayPointInfoList(); //작업경로 리스트 조회
+        //registDrivingInfo(); //주행데이터 등록
+        //selectDrivingInfoFileList() // 주행데이터 파일리스트 조회
+        //selectDrivingInfoFileList();
+        //deleteContents(); //컨텐츠 삭제;
 
         executeConcurrentTests(this.validationApis);
 
@@ -51,10 +58,6 @@ public class AdcuApiTestService extends BaseApiTestService {
 
     // 단말기 펌웨어 버전조회
     public void selectFirmWareVersion() {
-//
-
-        logger.info("--- 차량 단말기 펌웨어 버전조회 테스트 시작 ---");
-        //List<ApiRequest> adcuApis = new ArrayList<>();
 
         // 템플릿에서 필요한 Path 파라미터 추출
         String template = "/api/adcu/firmware/check-latest/{currentVersion}";
@@ -143,34 +146,9 @@ public class AdcuApiTestService extends BaseApiTestService {
 
     }
 
-    // 경작지 조회
-    public void selectFarmland() {
-
-        List<ApiRequest> adcuApis = new ArrayList<>();
-
-        // 템플릿에서 필요한 Path 파라미터 추출
-        String template = "/api/adcu/farmland/{vinId}/{plindex}";
-        Map<String, String> requiredParams = ApiRequest.extractPathParamsFromTemplate(template);
-
-        logger.info("템플릿: {}", template);
-        logger.info("필요한 Path 파라미터: {}", requiredParams.keySet());
-
-        // 올바른 Path 파라미터 설정
-        ApiRequest validRequest = new ApiRequest(template, "GET")
-                .addPathParam("vinId", "S0C8-A0004")
-                .addPathParam("plindex", "1002");
-
-        boolean isValid = validRequest.validatePathParams();
-        logger.info("올바른 Path 파라미터 검증 결과: {}", isValid);
-        // 실제 API 호출 테스트
-        this.validationApis.add(createDefaultHeaders(validRequest));
-
-    }
 
     // 경작지 상세 조회
     public void selectDetailFarmland() {
-
-        List<ApiRequest> adcuApis = new ArrayList<>();
 
         // 템플릿에서 필요한 Path 파라미터 추출
         String template = "/api/adcu/farmland/detail/{vinId}/{plindex}";
@@ -194,8 +172,6 @@ public class AdcuApiTestService extends BaseApiTestService {
     // 좌표기반 경작지 조회
     public void selectFarmlandListAsPoint() {
 
-        List<ApiRequest> adcuApis = new ArrayList<>();
-
         // 템플릿에서 필요한 Path 파라미터 추출
         String template = "/api/adcu/farmland/list";
         Map<String, String> requiredParams = ApiRequest.extractPathParamsFromTemplate(template);
@@ -209,8 +185,6 @@ public class AdcuApiTestService extends BaseApiTestService {
                 .addQueryParam("latitude", "208416.0")
                 .addQueryParam("longitude", "434698.0");
 
-        boolean isValid = validRequest.validatePathParams();
-        logger.info("올바른 Path 파라미터 검증 결과: {}", isValid);
         // 실제 API 호출 테스트
         this.validationApis.add(createDefaultHeaders(validRequest));
 
@@ -246,8 +220,6 @@ public class AdcuApiTestService extends BaseApiTestService {
     // 작업기 리스트 조회
     public void selectEquipmentList() {
 
-        List<ApiRequest> adcuApis = new ArrayList<>();
-
         // 템플릿에서 필요한 Path 파라미터 추출
         String template = "/api/adcu/equipment/list";
         Map<String, String> requiredParams = ApiRequest.extractPathParamsFromTemplate(template);
@@ -259,9 +231,6 @@ public class AdcuApiTestService extends BaseApiTestService {
         ApiRequest validRequest = new ApiRequest(template, "GET")
                 .addQueryParam("vinId", "S0C8-A0004");
 
-
-        boolean isValid = validRequest.validatePathParams();
-        logger.info("올바른 Path 파라미터 검증 결과: {}", isValid);
         // 실제 API 호출 테스트
         this.validationApis.add(createDefaultHeaders(validRequest));
 
@@ -269,8 +238,6 @@ public class AdcuApiTestService extends BaseApiTestService {
 
     // 작업기 조회
     public void selectEquipment() {
-
-        List<ApiRequest> adcuApis = new ArrayList<>();
 
         // 템플릿에서 필요한 Path 파라미터 추출
         String template = "/api/adcu/equipment/{vinId}/{eqindex}";
@@ -391,10 +358,230 @@ public class AdcuApiTestService extends BaseApiTestService {
                 .addMultipartFile("file", testKmlFile));
     }
 
+    //작업기록 등록
+    public void registLogData(){
+        // 차량 정보 수정 (Path 파라미터 사용)
+        ApiRequest apiRequest = createDefaultHeaders(new ApiRequest("/api/adcu/adcuLogdata", "POST"))
+                .setBody("{\n" +
+                        "  \"vinId\": \"ADCU-A0001\",\n" +
+                        "  \"dtindex\": 2,\n" +
+                        "  \"posGPS\": {\n" +
+                        "    \"x\": 127.1234567,\n" +
+                        "    \"y\": 37.5678901\n" +
+                        "  },\n" +
+                        "  \"posTM\": {\n" +
+                        "    \"x\": 127.1234567,\n" +
+                        "    \"y\": 37.5678901\n" +
+                        "  },\n" +
+                        "  \"wayType\": \"STRAIGHT\",\n" +
+                        "  \"lbo\": 0.5,\n" +
+                        "  \"curve\": false,\n" +
+                        "  \"backDirect\": false,\n" +
+                        "  \"speed\": 8.5,\n" +
+                        "  \"pto\": true,\n" +
+                        "  \"reqRpm\": 1800,\n" +
+                        "  \"resRpm\": 1780,\n" +
+                        "  \"heading\": 45.2,\n" +
+                        "  \"errorDistance\": 0.15,\n" +
+                        "  \"cmd\": \"FORWARD\",\n" +
+                        "  \"utc\": 1703123456789,\n" +
+                        "  \"reqGearStatus\": 1,\n" +
+                        "  \"resGearStatus\": 1,\n" +
+                        "  \"shuttleLever\": 1,\n" +
+                        "  \"reqGearStep\": 3,\n" +
+                        "  \"resGearStep\": 3,\n" +
+                        "  \"lineHeading\": 45.0,\n" +
+                        "  \"headingOffset\": 0.2,\n" +
+                        "  \"imuPitch\": 2,\n" +
+                        "  \"imuRoll\": 1,\n" +
+                        "  \"imuYaw\": 0,\n" +
+                        "  \"imuChanging\": false,\n" +
+                        "  \"nHitchCurrPos\": 50,\n" +
+                        "  \"emergency\": 0,\n" +
+                        "  \"wpindex\": 1,\n" +
+                        "  \"statusNMEA\": 1,\n" +
+                        "  \"reqCurvature\": 0.0,\n" +
+                        "  \"resCurvature\": 0.0,\n" +
+                        "  \"nLevelPos\": 0,\n" +
+                        "  \"nDraftRatio\": 0,\n" +
+                        "  \"nPlowingPos\": 0,\n" +
+                        "  \"nEngineLoad\": 75,\n" +
+                        "  \"bequip\": true,\n" +
+                        "  \"brpm\": true,\n" +
+                        "  \"adMode\": \"AUTO\",\n" +
+                        "  \"drvCmd\": \"FORWARD\",\n" +
+                        "  \"routeType\": \"STRAIGHT\",\n" +
+                        "  \"templatePathCnt\": 1,\n" +
+                        "  \"statusPVED\": 1,\n" +
+                        "  \"posTMIMU\": {\n" +
+                        "    \"x\": 127.1234567,\n" +
+                        "    \"y\": 37.5678901\n" +
+                        "  },\n" +
+                        "  \"subTransmission\": 1,\n" +
+                        "  \"lowSpeed\": 0,\n" +
+                        "  \"bSuperLowGearCheckDone\": false,\n" +
+                        "  \"bHitchUpDnError\": false,\n" +
+                        "  \"extra\": \"test_data\"\n" +
+                        "}");
+
+        validationApis.add(createDefaultHeaders(apiRequest));
+
+    }
+
+    // 작업경로 조회
+    public void selectWayPointInfo() {
+
+        // 템플릿에서 필요한 Path 파라미터 추출
+        String template = "/api/adcu/wayPointInfo/{vinId}/{wpindex}";
+        Map<String, String> requiredParams = ApiRequest.extractPathParamsFromTemplate(template);
+
+        logger.info("템플릿: {}", template);
+        logger.info("필요한 Path 파라미터: {}", requiredParams.keySet());
+
+        // 올바른 Path 파라미터 설정
+        ApiRequest validRequest = new ApiRequest(template, "GET")
+                .addPathParam("vinId", "S0C8-A0006")
+                .addPathParam("wpindex", "1");
+
+        boolean isValid = validRequest.validatePathParams();
+        logger.info("올바른 Path 파라미터 검증 결과: {}", isValid);
+        // 실제 API 호출 테스트
+        this.validationApis.add(createDefaultHeaders(validRequest));
+
+    }
+
+
+    // 작업경로 리스트 조회
+    public void selectWayPointInfoList() {
+
+        // 템플릿에서 필요한 Path 파라미터 추출
+        String template = "/api/adcu/wayPointInfo/list";
+        Map<String, String> requiredParams = ApiRequest.extractPathParamsFromTemplate(template);
+
+        logger.info("템플릿: {}", template);
+        logger.info("필요한 Path 파라미터: {}", requiredParams.keySet());
+
+        // 올바른 Path 파라미터 설정
+        ApiRequest validRequest = new ApiRequest(template, "GET")
+                .addQueryParam("vinId", "S0C8-A0010")
+               // .addQueryParam("plindex", "1")
+                .addQueryParam("page", "1")
+                .addQueryParam("size", "100")
+                .addQueryParam("sortBy", "date_create")
+                .addQueryParam("sortDirection","desc")
+                .addQueryParam("status","active");
+
+        // 실제 API 호출 테스트
+        this.validationApis.add(createDefaultHeaders(validRequest));
+
+    }
+
+    //작업경로 파일 등록
+    public void registDrivingInfo(){
+
+        File testKmlFile = createTestKmlFile();
+
+        validationApis.add(createDefaultHeaders(new ApiRequest("/api/adcu/vehicle/drivingInfo", "POST"))
+                .setContentType("multipart/form-data")
+                .addMultipartField("vinId", "S0C8-A0006")
+                .addMultipartField("plindex", "1")
+                .addMultipartField("eqindex", "1")
+                .addMultipartFile("file", testKmlFile));
+    }
+
+    // 테스트용 KML 파일 생성
+    private File createTestKmlFile() {
+        try {
+            File tempFile = File.createTempFile("test_driving_data", ".kml");
+            tempFile.deleteOnExit();
+
+            // 간단한 KML 파일 내용 생성
+            String kmlContent = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                    "<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n" +
+                    "  <Document>\n" +
+                    "    <name>Test Driving Data</name>\n" +
+                    "    <Placemark>\n" +
+                    "      <name>Test Track</name>\n" +
+                    "      <LineString>\n" +
+                    "        <coordinates>\n" +
+                    "          127.0,37.0,0\n" +
+                    "          127.001,37.001,0\n" +
+                    "          127.002,37.002,0\n" +
+                    "        </coordinates>\n" +
+                    "      </LineString>\n" +
+                    "    </Placemark>\n" +
+                    "  </Document>\n" +
+                    "</kml>";
+
+            java.nio.file.Files.write(tempFile.toPath(), kmlContent.getBytes());
+            return tempFile;
+        } catch (Exception e) {
+            logger.error("테스트 KML 파일 생성 실패", e);
+            return null;
+        }
+    }
+
+    public void selectDrivingInfoFileList(){
+        // 템플릿에서 필요한 Path 파라미터 추출
+        String template = "/api/adcu/files";
+        Map<String, String> requiredParams = ApiRequest.extractPathParamsFromTemplate(template);
+
+        logger.info("템플릿: {}", template);
+        logger.info("필요한 Path 파라미터: {}", requiredParams.keySet());
+
+        // 올바른 Path 파라미터 설정
+        ApiRequest validRequest = new ApiRequest(template, "GET")
+                .addQueryParam("vinId", "S0C8-A0004")
+               // .addQueryParam("plindex", "1")
+                .addQueryParam("page", "1")
+                .addQueryParam("size", "100");
+
+        // 실제 API 호출 테스트
+        this.validationApis.add(createDefaultHeaders(validRequest));
+
+    }
+
+    public void deleteContents(){
+
+        // 템플릿에서 필요한 Path 파라미터 추출
+        String template = "/api/adcu/contents/delete";
+        Map<String, String> requiredParams = ApiRequest.extractPathParamsFromTemplate(template);
+
+        logger.info("템플릿: {}", template);
+        logger.info("필요한 Path 파라미터: {}", requiredParams.keySet());
+
+        /*ApiRequest validRequest = new ApiRequest(template, "DELETE")
+                .setBody("{\n" +
+                        "    \"delType\": \"equipment\",\n" +
+                        "    \"vinId\": \"OJUN-A0003\",\n" +
+                        "    \"index\": 6\n" +
+                        "}");*/
+
+        /*ApiRequest validRequest = new ApiRequest(template, "DELETE")
+                .setBody("{\n" +
+                        "    \"delType\": \"farmland\",\n" +
+                        "    \"vinId\": \"OJUN-A0004\",\n" +
+                        "    \"index\": 1\n" +
+                        "}");
+         */
+
+        ApiRequest validRequest = new ApiRequest(template, "DELETE")
+                .setBody("{\n" +
+                        "    \"delType\": \"wayPointInfo\",\n" +
+                        "    \"vinId\": \"OJUN-A0004\",\n" +
+                        "    \"index\": 1\n" +
+                        "}");
+
+        // 실제 API 호출 테스트
+        this.validationApis.add(createDefaultHeaders(validRequest));
+
+
+    }
+
     // 응답 데이터 분석 및 로깅
     public void analyzeResponses() {
         logger.info("=== 응답 데이터 분석 ===");
-        
+
         for (TestResult result : results) {
             if (result.isSuccess() && result.getApiResponse() != null) {
                 ApiResponse response = result.getApiResponse();

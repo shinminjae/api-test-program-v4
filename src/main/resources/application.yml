@@ -1,5 +1,5 @@
 environments:
-  tms-dev:
+  tms-local:
     auth-url: https://tms-agri-dev.daedong.co.kr/api/auth
     api-url: http://localhost:18080
     credentials:

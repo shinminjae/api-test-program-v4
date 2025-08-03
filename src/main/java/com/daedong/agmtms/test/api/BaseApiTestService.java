@@ -73,27 +73,50 @@ public abstract class BaseApiTestService {
             // 요청 바디 설정
             if (apiRequest.isMultipart()) {
                 builder.method(apiRequest.getMethod(), createMultipartBody(apiRequest));
-            } else if ("POST".equalsIgnoreCase(apiRequest.getMethod()) || 
-                       "PUT".equalsIgnoreCase(apiRequest.getMethod()) ||
-                       "PATCH".equalsIgnoreCase(apiRequest.getMethod())) {
-                RequestBody body = RequestBody.create(
-                        apiRequest.getBody() != null ? apiRequest.getBody() : "{}",
-                        MediaType.parse(apiRequest.getContentType())
-                );
-                
+            } else {
                 switch (apiRequest.getMethod().toUpperCase()) {
+                    case "GET":
+                        // GET 요청은 바디가 없음
+                        builder.get();
+                        break;
+                    case "DELETE":
+                        // DELETE 요청은 바디가 있을 수도 있고 없을 수도 있음
+                        if (apiRequest.getBody() != null && !apiRequest.getBody().trim().isEmpty()) {
+                            RequestBody deleteBody = RequestBody.create(
+                                    apiRequest.getBody(),
+                                    MediaType.parse(apiRequest.getContentType())
+                            );
+                            builder.delete(deleteBody);
+                        } else {
+                            builder.delete();
+                        }
+                        break;
                     case "POST":
-                        builder.post(body);
-                        break;
                     case "PUT":
-                        builder.put(body);
-                        break;
                     case "PATCH":
-                        builder.patch(body);
+                        // POST, PUT, PATCH 요청은 바디가 있음
+                        RequestBody body = RequestBody.create(
+                                apiRequest.getBody() != null ? apiRequest.getBody() : "{}",
+                                MediaType.parse(apiRequest.getContentType())
+                        );
+                        
+                        switch (apiRequest.getMethod().toUpperCase()) {
+                            case "POST":
+                                builder.post(body);
+                                break;
+                            case "PUT":
+                                builder.put(body);
+                                break;
+                            case "PATCH":
+                                builder.patch(body);
+                                break;
+                        }
+                        break;
+                    default:
+                        // 기타 HTTP 메서드는 기본 처리
+                        builder.method(apiRequest.getMethod(), null);
                         break;
                 }
-            } else {
-                builder.method(apiRequest.getMethod(), null);
             }
 
             try (Response response = client.newCall(builder.build()).execute()) {

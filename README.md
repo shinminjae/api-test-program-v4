@@ -1,223 +1,253 @@
-# API Test Program v4
+# API 테스트 프로그램 v4
 
-대동공업 TMS(Transport Management System) API 테스트 자동화 프로그램입니다.
+로그인하여 토큰을 받아와서 각 사이트의 API를 테스트하는 프로그램입니다.
 
-## 📋 프로젝트 개요
+## 주요 기능
 
-이 프로그램은 대동공업의 TMS 시스템 API를 자동으로 테스트하고 성능을 측정하는 도구입니다. 다중 환경(개발, 스테이징, 운영)을 지원하며, 병렬 처리와 재시도 로직을 통해 안정적인 테스트를 수행합니다.
+### 🔧 리팩토링된 구조
+- **명확한 헤더/파라미터 설정**: 체이닝 방식으로 쉽게 API 요청 구성
+- **구조화된 응답 처리**: `ApiResponse` 클래스로 개별 필드 접근 가능
+- **멀티파트 데이터 지원**: 파일 업로드 등 복잡한 요청 처리
+- **사이트별 API 테스트 서비스**: 각 도메인별로 분리된 테스트 클래스
 
-## 🏗️ 아키텍처
+### 🚀 지원하는 API 타입
+1. **ADCU API** (`AdcuApiTestService`)
+   - 차량 관련 API
+   - 고객 관련 API
+   - 통계 관련 API
+   - 리포트 관련 API
+   - 주행 데이터 API (멀티파트 데이터 예제 포함)
 
+2. **관리 시스템 API** (`ManagementApiTestService`)
+   - 사용자 관리 API
+   - 시스템 설정 API
+   - 알림 관리 API
+   - 감사 로그 API
+
+3. **모바일 API** (`MobileApiTestService`)
+   - 모바일 차량 API
+   - 모바일 작업 API
+   - 모바일 위치 API
+   - 모바일 알림 API
+   - 모바일 동기화 API
+
+## 사용법
+
+### 기본 실행
+```bash
+# 모든 API 테스트 실행
+./gradlew run
+
+# 특정 환경에서 실행
+./gradlew run --args="--env=tms-dev"
+
+# 특정 API 타입만 테스트
+./gradlew run --args="--env=tms-dev --api=adcu"
+./gradlew run --args="--env=tms-dev --api=management"
+./gradlew run --args="--env=tms-dev --api=mobile"
 ```
-src/main/java/com/daedong/agmtms/test/
-├── MainApplication.java          # 메인 애플리케이션 진입점
-├── api/                          # API 테스트 관련
-│   ├── ApiTestService.java       # API 테스트 서비스
-│   └── dto/
-│       ├── ApiRequest.java       # API 요청 DTO
-│       └── TestResult.java       # 테스트 결과 DTO
-├── auth/                         # 인증 관련
-│   ├── AuthService.java          # 인증 서비스
-│   └── dto/
-│       └── TokenResponse.java    # 토큰 응답 DTO
-├── config/                       # 설정 관리
-│   └── TestConfig.java           # 테스트 설정 로더
-├── monitor/                      # 모니터링 및 성능 측정
-│   ├── PerformanceCollector.java # 성능 데이터 수집기
-│   └── TestMonitor.java          # 테스트 모니터
-└── report/                       # 리포트 생성
-    └── TestReporter.java         # HTML 리포트 생성기
+
+### 명령행 옵션
+- `--env=<환경명>`: 테스트할 환경 지정 (기본값: tms-dev)
+- `--api=<API타입>`: 테스트할 API 타입 지정 (기본값: all)
+  - `adcu`: ADCU API만 테스트
+  - `management`: 관리 시스템 API만 테스트
+  - `mobile`: 모바일 API만 테스트
+  - `pathparam`: Path 파라미터 예제 API만 테스트
+  - `all`: 모든 API 테스트
+
+### Path 파라미터 예제 실행
+```bash
+# Path 파라미터 사용법 예제 실행
+./gradlew run --args="--env=tms-dev --api=pathparam"
 ```
 
-## 🚀 주요 기능
+## API 요청 설정 예제
 
-### 1. 다중 환경 지원
-- 개발(dev), 스테이징(staging), 운영(prod) 환경 설정
-- 환경별 URL 및 인증 정보 분리 관리
+### 기본 GET 요청
+```java
+ApiRequest request = new ApiRequest("/vehicle/status/list", "GET")
+    .addQueryParam("page", "1")
+    .addQueryParam("size", "10")
+    .addHeader("X-Custom-Header", "value");
+```
 
-### 2. 자동 인증 처리
-- 사용자 ID/비밀번호를 통한 자동 로그인
-- JWT 토큰 발급 및 관리
-- API 요청 시 자동 토큰 헤더 추가
+### POST 요청 with JSON Body
+```java
+ApiRequest request = new ApiRequest("/vehicle/register", "POST")
+    .setBody("{\"vinId\":\"TEST_VIN_002\",\"model\":\"TEST_MODEL\",\"year\":2024}")
+    .addHeader("Content-Type", "application/json");
+```
 
-### 3. API 테스트 자동화
-- **차량 상태 조회**: `/vehicle/status/list`
-- **고객 목록 조회**: `/customer/list`
-- **차량 통계 조회**: `/statistics/vehicle`
-- **일일 리포트 조회**: `/report/daily`
+### Path 파라미터 사용 예제
+```java
+// 단일 Path 파라미터
+ApiRequest request = new ApiRequest("/vehicle/{vinId}/detail", "GET")
+    .addPathParam("vinId", "TEST_VIN_001")
+    .addQueryParam("includeHistory", "true");
 
-### 4. 성능 모니터링
-- 응답 시간 측정 및 통계
-- 성공률 계산
-- 실시간 테스트 진행 상황 로깅
+// 다중 Path 파라미터
+ApiRequest request = new ApiRequest("/vehicle/{vinId}/alarm/{alarmId}", "PUT")
+    .addPathParam("vinId", "TEST_VIN_001")
+    .addPathParam("alarmId", "ALARM_001")
+    .setBody("{\"threshold\":6000,\"enabled\":false}");
 
-### 5. 병렬 처리
-- 동시 요청 처리 (기본값: 5개)
-- ExecutorService를 활용한 스레드 풀 관리
+// Path 파라미터와 쿼리 파라미터 조합
+ApiRequest request = new ApiRequest("/vehicle/{vinId}/drivingInfo", "GET")
+    .addPathParam("vinId", "TEST_VIN_001")
+    .addQueryParam("startDate", "2024-01-01")
+    .addQueryParam("endDate", "2024-12-31")
+    .addQueryParam("page", "1")
+    .addQueryParam("size", "20");
+```
 
-### 6. 재시도 로직
-- 실패 시 자동 재시도 (기본값: 3회)
-- 지수 백오프 전략
+### 멀티파트 데이터 요청 (파일 업로드)
+```java
+File kmlFile = new File("driving_data.kml");
+ApiRequest request = new ApiRequest("/api/adcu/vehicle/drivingInfo", "POST")
+    .setContentType("multipart/form-data")
+    .addMultipartField("vinId", "TEST_VIN_001")
+    .addMultipartField("plindex", "1")
+    .addMultipartField("eqindex", "1")
+    .addMultipartFile("file", kmlFile);
+```
 
-### 7. 리포트 생성
-- HTML 형태의 테스트 결과 리포트
-- 성공률, 평균 응답시간, 최대 응답시간 등 통계 정보
+## 응답 처리 예제
 
-## 🛠️ 기술 스택
+### 기본 응답 정보 접근
+```java
+ApiResponse response = executeApiCall(request);
 
-- **Java 11+**
-- **Gradle** - 빌드 도구
-- **OkHttp3** - HTTP 클라이언트
-- **Jackson** - JSON/YAML 처리
-- **SLF4J + Logback** - 로깅
-- **JUnit 5** - 테스트 프레임워크
+// 기본 정보
+int statusCode = response.getStatusCode();
+boolean isSuccess = response.isSuccess();
+long responseTime = response.getResponseTime();
 
-## 📦 의존성
+// API 응답 구조에 맞는 필드들
+String apiId = response.getApiId();
+Integer code = response.getCode();
+String message = response.getMessage();
+Long serverTime = response.getServerTime();
+String traceId = response.getTraceId();
+```
 
-```gradle
-dependencies {
-    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2'
-    implementation 'org.slf4j:slf4j-api:2.0.9'
-    implementation 'ch.qos.logback:logback-classic:1.4.11'
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+### JSON 응답 데이터 접근
+```java
+// 단일 필드 접근
+String fieldValue = response.getString("fieldName");
+Integer intValue = response.getInteger("fieldName");
+Long longValue = response.getLong("fieldName");
+Boolean boolValue = response.getBoolean("fieldName");
+
+// 중첩된 필드 접근
+String nestedValue = response.getNestedString("data.user.name");
+Integer nestedInt = response.getNestedInteger("data.user.age");
+
+// 배열 데이터 접근
+List<JsonNode> dataList = response.getDataList();
+for (JsonNode item : dataList) {
+    String name = item.get("name").asText();
+    Integer age = item.get("age").asInt();
 }
 ```
 
-## ⚙️ 설정
+## 멀티파트 데이터 예제
+
+### 주행 데이터 등록 API (KML 파일 업로드)
+```java
+// 테스트용 KML 파일 생성
+File testKmlFile = createTestKmlFile();
+
+// 멀티파트 요청 생성
+ApiRequest request = new ApiRequest("/api/adcu/vehicle/drivingInfo", "POST")
+    .setContentType("multipart/form-data")
+    .addMultipartField("vinId", "TEST_VIN_001")
+    .addMultipartField("plindex", "1")
+    .addMultipartField("eqindex", "1")
+    .addMultipartFile("file", testKmlFile);
+
+// API 호출 및 응답 처리
+ApiResponse response = executeApiCall(request);
+if (response.isSuccess()) {
+    // 응답 데이터 분석
+    String originalFileName = response.getNestedString("data.originalFileName");
+    String fileName = response.getNestedString("data.fileName");
+    Integer fileSize = response.getNestedInteger("data.fileSize");
+    Integer drivingInfoId = response.getNestedInteger("data.drivingInfoId");
+}
+```
+
+## 테스트 결과 분석
+
+### 응답 데이터 분석
+```java
+// 각 API 테스트 서비스에서 사용 가능
+public void analyzeResponses() {
+    for (TestResult result : results) {
+        if (result.isSuccess() && result.getApiResponse() != null) {
+            ApiResponse response = result.getApiResponse();
+            
+            logger.info("API: {}", result.getApi());
+            logger.info("  - 상태 코드: {}", response.getStatusCode());
+            logger.info("  - 응답 시간: {}ms", response.getResponseTime());
+            logger.info("  - API ID: {}", response.getApiId());
+            logger.info("  - 응답 코드: {}", response.getCode());
+            logger.info("  - 메시지: {}", response.getMessage());
+            
+            // 데이터 필드 분석
+            if (response.getData() != null) {
+                List<JsonNode> dataList = response.getDataList();
+                logger.info("  - 데이터 개수: {}", dataList.size());
+            }
+        }
+    }
+}
+```
+
+## 설정 파일
 
 ### application.yml
 ```yaml
-environments:
-  dev:
-    auth-url: https://tms-agri-dev.daedong.co.kr/api/auth
-    api-url: https://tms-agri-dev.daedong.co.kr/api/tms
-    credentials:
-      userId: "mjha"
-      password: "123qwer@"
-
-test-config:
-  timeout: 30000
+test:
   retry-count: 3
   concurrent-requests: 5
+
+environments:
+  tms-dev:
+    api-url: "https://dev-api.example.com"
+    auth-url: "https://dev-auth.example.com"
+    credentials:
+      userId: "testuser"
+      password: "testpass"
 ```
 
-## 🚀 실행 방법
+## 빌드 및 실행
 
-### 1. 빌드
 ```bash
+# 프로젝트 빌드
 ./gradlew build
-```
 
-### 2. 실행
-```bash
-# 기본 환경(dev)으로 실행
+# 테스트 실행
+./gradlew test
+
+# 애플리케이션 실행
 ./gradlew run
 
-# 특정 환경으로 실행
-./gradlew run --args="--env=dev"
-./gradlew run --args="--env=staging"
-./gradlew run --args="--env=prod"
-```
-
-### 3. JAR 파일로 실행
-```bash
 # JAR 파일 생성
 ./gradlew jar
-
-# JAR 파일 실행
-java -jar build/libs/api-test-program-v4-1.0.1.jar --env=dev
 ```
 
-## 📊 출력 결과
+## 로그 및 리포트
 
-### 콘솔 로그
-```
-INFO  - API 테스트 프로그램 시작 - 환경: dev
-INFO  - 토큰 발급 성공: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-INFO  - [MONITOR] /vehicle/status/list - 성공 (245ms)
-INFO  - [SUCCESS] /vehicle/status/list (245ms): {"status":"success",...}
-INFO  - [MONITOR] /customer/list - 성공 (189ms)
-INFO  - [SUCCESS] /customer/list (189ms): {"customers":[...]}
-INFO  - HTML 리포트 생성 완료
-INFO  - 테스트 완료
-```
+- **콘솔 로그**: 실시간 테스트 진행 상황 및 결과
+- **HTML 리포트**: 상세한 테스트 결과 리포트 생성
+- **응답 분석**: 각 API 응답의 구조화된 데이터 분석
 
-### HTML 리포트 (test-report.html)
-- 테스트 결과 요약
-- API별 상세 결과 테이블
-- 성능 통계 정보
+## 주요 개선사항
 
-## 🔧 설정 옵션
-
-| 설정 | 기본값 | 설명 |
-|------|--------|------|
-| `timeout` | 30000ms | API 요청 타임아웃 |
-| `retry-count` | 3 | 실패 시 재시도 횟수 |
-| `concurrent-requests` | 5 | 동시 요청 수 |
-
-## 📁 프로젝트 구조
-
-```
-api-test-program-v4/
-├── build.gradle                 # Gradle 빌드 설정
-├── gradle/                      # Gradle Wrapper
-├── src/
-│   └── main/
-│       ├── java/                # Java 소스 코드
-│       └── resources/
-│           └── application.yml  # 환경 설정 파일
-├── test-report.html            # 생성된 테스트 리포트
-└── README.md                   # 프로젝트 문서
-```
-
-## 🔒 보안 고려사항
-
-- 인증 정보는 `application.yml` 파일에 저장
-- 프로덕션 환경에서는 환경 변수나 외부 설정 관리 도구 사용 권장
-- 토큰은 메모리에만 저장되며 프로그램 종료 시 자동 삭제
-
-## 🐛 문제 해결
-
-### 일반적인 문제들
-
-1. **인증 실패**
-   - 사용자 ID/비밀번호 확인
-   - 네트워크 연결 상태 확인
-
-2. **API 호출 실패**
-   - 서버 상태 확인
-   - URL 설정 확인
-   - 네트워크 방화벽 설정 확인
-
-3. **빌드 오류**
-   - Java 버전 확인 (Java 11+ 필요)
-   - Gradle Wrapper 권한 확인
-
-## 📈 성능 최적화
-
-- 동시 요청 수 조정으로 처리량 향상
-- 타임아웃 설정으로 응답 대기 시간 최적화
-- 재시도 횟수 조정으로 안정성과 성능 균형
-
-## 🤝 기여하기
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 라이선스
-
-이 프로젝트는 대동공업 내부 사용을 위한 프로젝트입니다.
-
-## 📞 문의
-
-프로젝트 관련 문의사항이 있으시면 개발팀에 연락해주세요.
-
----
-
-**버전**: 1.0.1  
-**최종 업데이트**: 2024년 
+1. **명확한 API 요청 구성**: 체이닝 방식으로 헤더, 파라미터, 바디 설정
+2. **구조화된 응답 처리**: JSON 응답의 개별 필드에 쉽게 접근
+3. **멀티파트 데이터 지원**: 파일 업로드 등 복잡한 요청 처리
+4. **사이트별 분리**: 각 도메인별로 독립적인 테스트 서비스
+5. **상세한 응답 분석**: API 응답의 모든 필드 분석 및 로깅
+6. **확장 가능한 구조**: 새로운 API 타입 쉽게 추가 가능 

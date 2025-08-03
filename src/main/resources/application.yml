@@ -1,7 +1,7 @@
 environments:
-  dev:
+  tms-dev:
     auth-url: https://tms-agri-dev.daedong.co.kr/api/auth
-    api-url: https://tms-agri-dev.daedong.co.kr/api/tms
+    api-url: http://localhost:18080
     credentials:
       userId: "mjha"
       password: "123qwer@"

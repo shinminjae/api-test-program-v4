@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+//https://1drv.ms/x/c/efa8ab5cd10bbbc6/EcV-RiaAPmVBuyThsse7ez0BOJpwMS8z0ITpRF1-LVU-eQ?e=igAEup
 public class AdcuApiTestService extends BaseApiTestService {
     private static final Logger logger = LoggerFactory.getLogger(AdcuApiTestService.class);
     private List<ApiRequest> validationApis = new ArrayList<>();
@@ -33,23 +34,32 @@ public class AdcuApiTestService extends BaseApiTestService {
         logger.info("=== ADCU API 전체 테스트 시작 ===");
 
         //selectFirmWareVersion(); //차량 단말기 펌웨어 버전조회
-        //registOrUpdateVehicleStatus(); // 차량상태 등록/수정
+        //registOrUpdateVehicleStatus(); // 차량상태 등록/수정 !!(mode입력 추가해줘야함 (작업완료))
         //registFarmland(); //경작지 등록
+
         //selectFarmland(); //경작지 조회
-        //selectDetailFarmland(); //경작지 상세조회
+
+        //selectFarmlandAsVinidList(); // 차량ID기반 경작지 조회
         //selectFarmlandListAsPoint(); //좌표기반 경작지 조회
+        //selectDetailFarmland(); //경작지 상세조회
+
         //registEquipment(); //작업기 등록
         //selectEquipmentList(); //작업기 리스트 조회
-        //selectEquipment(); //작업기 조회
+       // selectEquipment(); //작업기 조회
+
         //registWayPointInfo(); //작업경로 등록
         //registWayPointFile(); //작업경로 파일(RDDF) 등록
-        //registLogData(); //작업기록등록
-        //selectWayPointInfo(); //작업경로 조회
-        //selectWayPointInfoList(); //작업경로 리스트 조회
+
+        //registLogData(); //작업기록등록 !!!!(유일값 검사 넣어줘야 함)
+        //selectWayPointInfo(); //작업경로 조회  !!!(목록에 index 값들 넘겨줘야 함)
+        //selectWayPointInfoList(); //작업경로 리스트 조회 !!!(목록에 index 값들 넘겨줘야 함)
+
         //registDrivingInfo(); //주행데이터 등록
-        //selectDrivingInfoFileList() // 주행데이터 파일리스트 조회
-        //selectDrivingInfoFileList();
+        //selectDrivingInfoFileList(); // 주행데이터 파일리스트 조회
         //deleteContents(); //컨텐츠 삭제;
+        //uploadEmergencyStopEvent(); //비상정지 이벤트 관리 (복수 파일 업로드)
+        //sendAppPush(); //CASE별 AppPush 발송
+        //selectWork(); //작업선택
 
         executeConcurrentTests(this.validationApis);
 
@@ -84,19 +94,18 @@ public class AdcuApiTestService extends BaseApiTestService {
         ApiRequest apiRequest = createDefaultHeaders(new ApiRequest("/api/adcu/vehicle/status", "PUT"))
                 .setBody("{\n" +
                         "  \"vinId\": \"ADCU-99999\",\n" +
+                        "  \"mode\": \"eDrvStatusCmdEmergencyPause\",\n" +
                         "  \"status\": \"normal\",\n" +
-                        "  \"faultCount\": \"0\",\n" +
                         "  \"gnss\": \"normal\",\n" +
                         "  \"engineControl\": \"normal\",\n" +
                         "  \"missionControl\": \"normal\",\n" +
                         "  \"operationControl\": \"normal\",\n" +
-                        "  \"joystickControl\": \"normal\",\n" +
+                        "  \"canControl\": \"normal\",\n" +
                         "  \"valveControl\": \"normal\",\n" +
                         "  \"sideBrake\": \"normal\",\n" +
                         "  \"fuel\": \"normal\",\n" +
                         "  \"pto\": \"normal\",\n" +
-                        "  \"camera\": \"normal\",\n" +
-                        "  \"canControl\": \"normal\"\n" +
+                        "  \"camera\": \"normal\"\n" +
                         "}");
 
         validationApis.add(createDefaultHeaders(apiRequest));
@@ -105,15 +114,14 @@ public class AdcuApiTestService extends BaseApiTestService {
 
     //경작지 등록
     public void registFarmland(){
-        // 차량 정보 수정 (Path 파라미터 사용)
+
         ApiRequest apiRequest = createDefaultHeaders(new ApiRequest("/api/adcu/farmland", "POST"))
                 .setBody("{\n" +
                         "    \"vinId\": \"S0C8-A0004\",\n" +
-                        "    \"plindex\" : 1002,\n" +
+                        "    \"plindex\" : 1005,\n" +
                         "    \"name\": \"팜랜드2!!\",\n" +
                         "    \"size\": 1000,\n" +
                         "    \"eqindex\": 2,\n" +
-                        "    \"totalWorkTime\": 0,\n" +
                         "    \"dateWork\": 1709898253,\n" +
                         "    \"dateCreate\": 1709898253,\n" +
                         "    \"plpath\": {\n" +
@@ -143,6 +151,28 @@ public class AdcuApiTestService extends BaseApiTestService {
                         "}");
 
         validationApis.add(createDefaultHeaders(apiRequest));
+
+    }
+
+    //경작지 조회
+    public void selectFarmland() {
+
+        // 템플릿에서 필요한 Path 파라미터 추출
+        String template = "/api/adcu/farmland/{vinId}/{plindex}";
+        Map<String, String> requiredParams = ApiRequest.extractPathParamsFromTemplate(template);
+
+        logger.info("템플릿: {}", template);
+        logger.info("필요한 Path 파라미터: {}", requiredParams.keySet());
+
+        // 올바른 Path 파라미터 설정
+        ApiRequest validRequest = new ApiRequest(template, "GET")
+                .addPathParam("vinId", "S0C8-A0004")
+                .addPathParam("plindex", "1002");
+
+        boolean isValid = validRequest.validatePathParams();
+        logger.info("올바른 Path 파라미터 검증 결과: {}", isValid);
+        // 실제 API 호출 테스트
+        this.validationApis.add(createDefaultHeaders(validRequest));
 
     }
 
@@ -190,13 +220,32 @@ public class AdcuApiTestService extends BaseApiTestService {
 
     }
 
+    // 좌표기반 경작지 조회
+    public void selectFarmlandAsVinidList() {
+
+        // 템플릿에서 필요한 Path 파라미터 추출
+        String template = "/api/adcu/farmland/list/{vinId}";
+        Map<String, String> requiredParams = ApiRequest.extractPathParamsFromTemplate(template);
+
+        logger.info("템플릿: {}", template);
+        logger.info("필요한 Path 파라미터: {}", requiredParams.keySet());
+
+        // 올바른 Path 파라미터 설정
+        ApiRequest validRequest = new ApiRequest(template, "GET")
+                .addPathParam("vinId", "S0C8-A0004");
+
+        // 실제 API 호출 테스트
+        this.validationApis.add(createDefaultHeaders(validRequest));
+
+    }
+
     //작업기 등록
     public void registEquipment(){
         // 차량 정보 수정 (Path 파라미터 사용)
         ApiRequest apiRequest = createDefaultHeaders(new ApiRequest("/api/adcu/equipment", "POST"))
                 .setBody("{\n" +
                         "    \"vinId\" : \"OJUN-A0004\",\n" +
-                        "    \"eqindex\" : 140,\n" +
+                        "    \"eqindex\" : 141,\n" +
                         "    \"name\": \"test\",\n" +
                         "    \"category\": \"test01\",\n" +
                         "    \"type\": \"tt\",\n" +
@@ -364,7 +413,7 @@ public class AdcuApiTestService extends BaseApiTestService {
         ApiRequest apiRequest = createDefaultHeaders(new ApiRequest("/api/adcu/adcuLogdata", "POST"))
                 .setBody("{\n" +
                         "  \"vinId\": \"ADCU-A0001\",\n" +
-                        "  \"dtindex\": 2,\n" +
+                        "  \"dtindex\": 4,\n" +
                         "  \"posGPS\": {\n" +
                         "    \"x\": 127.1234567,\n" +
                         "    \"y\": 37.5678901\n" +
@@ -463,8 +512,8 @@ public class AdcuApiTestService extends BaseApiTestService {
 
         // 올바른 Path 파라미터 설정
         ApiRequest validRequest = new ApiRequest(template, "GET")
-                .addQueryParam("vinId", "S0C8-A0010")
-               // .addQueryParam("plindex", "1")
+                .addQueryParam("vinId", "OJUN-A0004")
+                .addQueryParam("plindex", "1")
                 .addQueryParam("page", "1")
                 .addQueryParam("size", "100")
                 .addQueryParam("sortBy", "date_create")
@@ -532,7 +581,7 @@ public class AdcuApiTestService extends BaseApiTestService {
         // 올바른 Path 파라미터 설정
         ApiRequest validRequest = new ApiRequest(template, "GET")
                 .addQueryParam("vinId", "S0C8-A0004")
-               // .addQueryParam("plindex", "1")
+                .addQueryParam("plindex", "1")
                 .addQueryParam("page", "1")
                 .addQueryParam("size", "100");
 
@@ -576,6 +625,168 @@ public class AdcuApiTestService extends BaseApiTestService {
         this.validationApis.add(createDefaultHeaders(validRequest));
 
 
+    }
+
+    // 비상정지 이벤트 관리 API 테스트 (복수 이미지 파일 업로드)
+    public void uploadEmergencyStopEvent() {
+        logger.info("--- 비상정지 이벤트 관리 API 테스트 시작 (이미지 파일 업로드) ---");
+        
+        // 테스트용 이벤트 이미지 파일들 생성
+        List<File> eventFiles = createTestEventFiles();
+        
+        if (eventFiles.isEmpty()) {
+            logger.error("테스트 이미지 파일 생성 실패로 API 테스트를 건너뜁니다.");
+            return;
+        }
+
+        // 비상정지 이벤트 업로드 요청 생성
+        ApiRequest apiRequest = createDefaultHeaders(new ApiRequest("/api/adcu/vehicle/emergency-stop", "POST"))
+                .setContentType("multipart/form-data")
+                .addMultipartField("vinId", "S0C8-A0006")
+                .addMultipartField("eventType", "1")
+                .addMultipartField("eventData", "비상정지 이벤트 테스트 데이터 - 이미지 파일 포함");
+
+        // 복수 이미지 파일 추가
+        for (int i = 0; i < eventFiles.size(); i++) {
+            File imageFile = eventFiles.get(i);
+            if (imageFile != null) {
+                apiRequest.addMultipartFile("eventFile", imageFile);
+                logger.info("이미지 파일 추가: {} (크기: {} bytes)", 
+                        imageFile.getName(), imageFile.length());
+            }
+        }
+
+        validationApis.add(apiRequest);
+        logger.info("--- 비상정지 이벤트 관리 API 테스트 완료 (총 {}개 이미지 파일) ---", 
+                eventFiles.stream().filter(f -> f != null).count());
+    }
+
+    // 테스트용 이벤트 이미지 파일들 생성
+    private List<File> createTestEventFiles() {
+        List<File> files = new ArrayList<>();
+        
+        try {
+            // 비상정지 상황 이미지 1 (JPEG)
+            File emergencyImage1 = createTestImage("emergency_situation_1", ".jpg", 800, 600, "비상정지 상황 이미지 1");
+            files.add(emergencyImage1);
+
+            // 비상정지 상황 이미지 2 (PNG)
+            File emergencyImage2 = createTestImage("emergency_situation_2", ".png", 1024, 768, "비상정지 상황 이미지 2");
+            files.add(emergencyImage2);
+
+            // 차량 상태 이미지 (JPEG)
+            File vehicleStatusImage = createTestImage("vehicle_status", ".jpg", 640, 480, "차량 상태 이미지");
+            files.add(vehicleStatusImage);
+
+            // GPS 위치 이미지 (PNG)
+            File gpsLocationImage = createTestImage("gps_location", ".png", 1200, 800, "GPS 위치 이미지");
+            files.add(gpsLocationImage);
+
+            // 시스템 로그 스크린샷 (JPEG)
+            File systemLogImage = createTestImage("system_log_screenshot", ".jpg", 1920, 1080, "시스템 로그 스크린샷");
+            files.add(systemLogImage);
+
+            logger.info("테스트 이벤트 이미지 파일 {}개 생성 완료", files.size());
+            
+        } catch (Exception e) {
+            logger.error("테스트 이벤트 이미지 파일 생성 실패", e);
+        }
+        
+        return files;
+    }
+
+    // 테스트용 이미지 파일 생성
+    private File createTestImage(String baseName, String extension, int width, int height, String text) {
+        try {
+            File imageFile = File.createTempFile(baseName, extension);
+            imageFile.deleteOnExit();
+
+            // Java AWT를 사용하여 간단한 이미지 생성
+            java.awt.image.BufferedImage image = new java.awt.image.BufferedImage(width, height, java.awt.image.BufferedImage.TYPE_INT_RGB);
+            java.awt.Graphics2D g2d = image.createGraphics();
+
+            // 배경색 설정 (회색)
+            g2d.setColor(new java.awt.Color(240, 240, 240));
+            g2d.fillRect(0, 0, width, height);
+
+            // 테두리 그리기
+            g2d.setColor(java.awt.Color.BLACK);
+            g2d.setStroke(new java.awt.BasicStroke(3));
+            g2d.drawRect(10, 10, width - 20, height - 20);
+
+            // 텍스트 설정
+            g2d.setColor(java.awt.Color.BLACK);
+            g2d.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 24));
+            
+            // 텍스트 중앙 정렬
+            java.awt.FontMetrics fm = g2d.getFontMetrics();
+            int textWidth = fm.stringWidth(text);
+            int textX = (width - textWidth) / 2;
+            int textY = height / 2;
+            
+            g2d.drawString(text, textX, textY);
+
+            // 추가 정보 표시
+            g2d.setFont(new java.awt.Font("Arial", java.awt.Font.PLAIN, 16));
+            String info = String.format("크기: %dx%d | 생성시간: %s", width, height, 
+                    java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            int infoWidth = fm.stringWidth(info);
+            int infoX = (width - infoWidth) / 2;
+            g2d.drawString(info, infoX, textY + 40);
+
+            // 파일명 표시
+            String fileName = baseName + extension;
+            int fileNameWidth = fm.stringWidth(fileName);
+            int fileNameX = (width - fileNameWidth) / 2;
+            g2d.drawString(fileName, fileNameX, textY + 70);
+
+            g2d.dispose();
+
+            // 이미지를 파일로 저장
+            if (extension.equalsIgnoreCase(".jpg") || extension.equalsIgnoreCase(".jpeg")) {
+                javax.imageio.ImageIO.write(image, "JPEG", imageFile);
+            } else if (extension.equalsIgnoreCase(".png")) {
+                javax.imageio.ImageIO.write(image, "PNG", imageFile);
+            } else {
+                javax.imageio.ImageIO.write(image, "PNG", imageFile);
+            }
+
+            logger.info("테스트 이미지 생성 완료: {} ({}x{})", imageFile.getName(), width, height);
+            return imageFile;
+
+        } catch (Exception e) {
+            logger.error("테스트 이미지 생성 실패: {}", baseName, e);
+            return null;
+        }
+    }
+
+    //CASE별 AppPUSH 발송
+    public void sendAppPush() {
+
+        // 차량 정보 수정 (Path 파라미터 사용)
+        ApiRequest apiRequest = createDefaultHeaders(new ApiRequest("/api/adcu/push", "POST"))
+                .setBody("{\n" +
+                        "    \"vinId\": \"S0C8-A0004\",\n" +
+                        "    \"category\": \"eDrvStatusEPauseStartPath\",\n" +
+                        "    \"eventType\": \"01\"\n" +
+                        "}");
+
+        validationApis.add(createDefaultHeaders(apiRequest));
+
+
+    }
+
+    public void selectWork(){
+        // 차량 정보 수정 (Path 파라미터 사용)
+        ApiRequest apiRequest = createDefaultHeaders(new ApiRequest("/api/adcu/select", "POST"))
+                .setBody("{\n" +
+                        "    \"vinId\": \"OJUN-A0004\",\n" +
+                        "    \"plindex\" : 1447,\n" +
+                        "    \"eqindex\": 140,\n" +
+                        "    \"wpindex\" : 11\n" +
+                        "}");
+
+        validationApis.add(createDefaultHeaders(apiRequest));
     }
 
     // 응답 데이터 분석 및 로깅

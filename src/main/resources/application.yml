@@ -5,7 +5,12 @@ environments:
     credentials:
       userId: "mjha"
       password: "123qwer@"
-
+  tms-dev:
+    auth-url: https://tms-agri-dev.daedong.co.kr/api/auth
+    api-url: https://tms-agri-dev.daedong.co.kr
+    credentials:
+      userId: "mjha"
+      password: "123qwer@"
 test-config:
   timeout: 30000
   retry-count: 3
